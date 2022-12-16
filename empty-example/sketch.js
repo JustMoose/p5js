@@ -22,8 +22,8 @@ function setup() {
     tile_size = createVector(50,25);
     noise_scale = createVector(0.1,0.1);
 
-    stroke_width = 3;
-    stroke_height = 10;
+    stroke_width = 2;
+    stroke_height = 12;
     stroke_spacing = 0.5;
     createCanvas(1000, 1000);
     background(0);
@@ -73,9 +73,11 @@ function draw() {
         //     }
         // }
 
-        background(color(0,0,0,255));
-        blendMode(LIGHTEST);
-        for (let x = 0; x < 200; x++ ) {
+        background(palette.splice(0, 1)); // Take the first palette colour out as the background colour.
+        //palette = palette.slice(1,palette.length);
+        // blendMode(LIGHTEST);
+        let lines = []
+        for (let x = 0; x < 100; x++ ) {
             let random_x = floor(random(width/tile_size.x));
             let random_y = floor(random(height/tile_size.y));
             let random_connection = floor(random(4));
@@ -90,23 +92,44 @@ function draw() {
                 //TODO COMPARE line_a to line_b_reverse_loop (If they match then this is a loop)
                 //TODO Otherwise you can combine the two lines (need to reverse one still, and remove the duplicate element);
                 let line_final = line_b.slice(1,line_b.length).reverse().concat(line_a);
-                setStroke(palette[x%palette.length]);
+                // setStroke(palette[x%palette.length]);
                 noFill();
+                // OLD DRAWING METHOD
                 // beginShape();
+                //for (let i = 0; i < line_final.length-1; i++ ) {
+                //    let tile_a = line_final[i];
+                //    let tile_b = line_final[i+1];
+                //    let points = tile_a.getPath(tile_b);
+                //
+                //    // if (i == 0) {
+                //    //     vertex(points[0], points[1]);
+                //    // }
+                //    // bezierVertex(...points);
+                //    tallBezier(...points, stroke_height, stroke_spacing);
+                //}
+                let points = [];
+                console.log()
                 for (let i = 0; i < line_final.length-1; i++ ) {
                     let tile_a = line_final[i];
                     let tile_b = line_final[i+1];
-                    let points = tile_a.getPath(tile_b);
-
-                    // if (i == 0) {
-                    //     vertex(points[0], points[1]);
-                    // }
-                    // bezierVertex(...points);
-                    tallBezier(...points, stroke_height, stroke_spacing);
+                    let path = tile_a.getPath(tile_b);
+                    // points.push(tiles[i].position);
+                    points = points.concat(path);
                 }
-                console.log("END SHAPE");
+                let line = new Line(points, palette[x%palette.length]);
+                lines.push(line);
                 // endShape();
             }
+        }
+        for (let i = stroke_height/2; i >= -stroke_height/2; i -= stroke_spacing) {
+            console.log("Drawing lines with offset: " + i);
+            let tint = null;
+            if (i != -stroke_height/2) {
+                tint = color(0);
+            }
+            lines.forEach(line => {
+                line.draw(i, tint);
+            });
         }
         
 
@@ -124,34 +147,76 @@ function draw() {
     }
 }
 
-function setStroke(colour) {
-    current_stroke = colour;
-    stroke(colour);
-}
+// function setStroke(colour) {
+//     current_stroke = colour;
+//     stroke(colour);
+// }
 
-function tallBezier(x1,y1, x2,y2, x3,y3, x4,y4, height, spacing) {
-    strokeWeight(stroke_width);
-    noFill();
-    let c = color(current_stroke);
-    stroke(lerpColor(c, color(0), 0.5));
-    let end = height/2
-    for (let i = -height/2; i <= end; i+=spacing) {
-        if (i+spacing > end) {
-            stroke(c);
+// TODO: DELETE THIS AFTER THE REPLACEMENT IS WORKING
+// function tallBezier(x1,y1, x2,y2, x3,y3, x4,y4, height, spacing) {
+//     strokeWeight(stroke_width);
+//     noFill();
+//     let c = color(current_stroke);
+//     stroke(lerpColor(c, color(0), 0.5));
+//     let end = height/2
+//     for (let i = -height/2; i <= end; i+=spacing) {
+//         if (i+spacing > end) {
+//             stroke(c);
+//         }
+//         bezier(x1,y1-i, x2,y2-i, x3,y3-i, x4,y4-i);
+//     }
+// }
+
+class Line {
+    constructor(points, line_color) {
+        this.points = points;
+        this.line_color = color(line_color);
+    }
+    draw(offset, tint) {
+        if (tint) {
+            let temp_color = lerpColor(tint, this.line_color, 0.5);
+            temp_color.setAlpha(100);
+            stroke(temp_color);
+        } else {
+            let temp_color = this.line_color;
+            temp_color.setAlpha(200);
+            stroke(temp_color);
         }
-        bezier(x1,y1-i, x2,y2-i, x3,y3-i, x4,y4-i);
+        beginShape();
+
+        // circle(this.points[0].x, this.points[0].y, 1);
+        // stroke('#ffff00');
+        // stroke(color);
+
+        for (let i = 0; i < this.points.length-3; i += 4 ) {
+            
+            vertex(this.points[i].x, this.points[i].y + offset);
+            bezierVertex(
+                this.points[i+1].x,   this.points[i+1].y + offset, 
+                this.points[i+2].x, this.points[i+2].y + offset, 
+                this.points[i+3].x, this.points[i+3].y + offset
+            );
+            // stroke('#ff00ff');
+            // circle(this.points[i].x,   this.points[i].y, 1);
+            // circle(this.points[i+3].x, this.points[i+3].y, 1);
+            // stroke('#ffff00');
+            // circle(this.points[i+1].x, this.points[i+1].y, 1);
+            // circle(this.points[i+2].x, this.points[i+2].y, 1);
+            // tallBezier(...this.points, stroke_height, stroke_spacing);
+        }
+        // stroke(this.line_color);
+        endShape();
+        // console.log(this.points);
     }
 }
-
-// function keyReleased() {
-//     draw();
-// }
 
 class Tile {
     constructor(type, x, y, w, h) {
         this.type = type; // Index of type? 0,1,2
         this.x = x;
         this.y = y;
+        this.position = createVector(this.x * this.w, this.y * this.h);
+        // TODO: replace x & y with position
         this.w = w;
         this.h = h;
         this.connections = undefined;
@@ -310,15 +375,21 @@ class Tile {
         // console.log("in via: " + other_strand_end.x, other_strand_end.y);
         // console.log("to: " + other_strand_middle.x, other_strand_middle.y);
         
+        //return [
+        //    this_strand_middle.x,
+        //    this_strand_middle.y,
+        //    this_strand_end.x,
+        //    this_strand_end.y,
+        //    other_strand_end.x,
+        //    other_strand_end.y,
+        //    other_strand_middle.x,
+        //    other_strand_middle.y,
+        //];
         return [
-            this_strand_middle.x,
-            this_strand_middle.y,
-            this_strand_end.x,
-            this_strand_end.y,
-            other_strand_end.x,
-            other_strand_end.y,
-            other_strand_middle.x,
-            other_strand_middle.y,
+            this_strand_middle,
+            this_strand_end,
+            other_strand_end,
+            other_strand_middle,
         ];
     }
     getPoint(direction) {
