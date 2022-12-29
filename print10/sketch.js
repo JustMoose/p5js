@@ -24,16 +24,18 @@ function setup() {
     // dividers[floor(random(dividers.length))];
     // dividers[floor(random(dividers.length))];
 
-    tile_size = createVector(100,50);
+    tile_size = createVector(40,20);
     noise_scale = createVector(0.001,0.001,0.05);
+    // noise_scale = createVector(0.001,0.001,0.05);
     type_noise_scale = createVector(0.5, 0.5);
-    noise_magnitude = 200;
-    stroke_width = 0.25;
+    // noise_magnitude = 200;
+    noise_magnitude = 20;
+    stroke_width = 3;
     // stroke_height = 10;
     // stroke_spacing = 0.25;
-    stroke_height = 6;
-    stroke_spacing = 0.5;
-    createCanvas(1000, 1000);
+    stroke_height = 10;
+    stroke_spacing = 1;
+    createCanvas(800, 800);
     background(0);
     frameRate(30);
     strokeWeight(stroke_width);
@@ -94,17 +96,18 @@ function draw() {
                 lines.push(line);
             }
         }
-    } else if (frameCount <= 10 ){
+    }
+    else if (frameCount <= 10 ){
         for (let i = stroke_height/2; i >= -stroke_height/2; i = round(i-stroke_spacing,4)) {
             let tint = null;
-            // if (i - stroke_spacing > -stroke_height/2) {
-            //     tint = color(background_color);
-            // }
+            if (i - stroke_spacing > -stroke_height/2) {
+                tint = color(background_color);
+            }
             lines.forEach(line => {
                 line.draw(i, tint);
             });
         }
-        // noLoop();
+        noLoop();
     }
 
 }
@@ -137,11 +140,11 @@ class Line {
     draw(offset, tint) {
         if (tint) {
             let temp_color = lerpColor(tint, this.line_color, 0.5);
-            temp_color.setAlpha(100);
+            // temp_color.setAlpha(100);
             stroke(temp_color);
         } else {
             let temp_color = this.line_color;
-            temp_color.setAlpha(200);
+            // temp_color.setAlpha(200);
             stroke(temp_color);
         }
 
